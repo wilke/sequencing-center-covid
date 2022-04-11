@@ -1,0 +1,5 @@
+	variants/220328.CDM4-1_S4.variants.tsv
+summarized	[('Omicron', 0.9999999999612385)]
+lineages	['BA.1' 'BA.2' 'BA.1.1']
+abundances	[0.576768 0.323232 0.1     ]
+resid	2.0886802936121995

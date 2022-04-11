@@ -1,0 +1,5 @@
+	variants/220328.21775_S11.variants.tsv
+summarized	[('Omicron', 0.9994461370113608)]
+lineages	['BA.3' 'BA.1' 'BA.1.1' 'BA.2']
+abundances	[0.30436086 0.25793207 0.25793207 0.17922114]
+resid	3.8585712865492336

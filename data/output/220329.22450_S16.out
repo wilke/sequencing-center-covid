@@ -1,0 +1,5 @@
+	variants/220329.22450_S16.variants.tsv
+summarized	[('Delta', 0.6666666666827169), ('Other', 0.33333333331702053)]
+lineages	['AY.3.1' 'AY.3.4' 'AY.11']
+abundances	[0.33333333 0.33333333 0.33333333]
+resid	0.1089927084540555
