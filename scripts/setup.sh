@@ -1,0 +1,24 @@
+#! /usr/bin/env sh 
+
+dir=`basename $1`
+
+echo Creating $dir
+
+covid_run_dir=/local/incoming/covid/runs/${dir}/
+export_dir=/vol/sars2/jdavis/Sarah/
+ssh_id_file=/local/incoming/covid/config/covid_rsa
+rsa_file=covid_`whoami`_rsa
+
+mkdir /local/incoming/covid/runs/${dir}
+for d in variants output depth bam samples staging ; do echo Creating ${dir}/${d}; mkdir -p ${covid_run_dir}/${d} ; done
+cp /local/incoming/covid/scripts/Makefile  ${covid_run_dir}
+
+echo "Copying fastq's"
+find $1 -name "*.fastq.gz" -exec cp {} ${covid_run_dir}/samples/ \;
+
+echo "Syncing to locust"
+rsync -arvp --rsh="ssh -i ~/.ssh/${rsa_file} " --include="*.fastq.gz" --exclude="*.*" ${covid_run_dir} wilke@locust:/vol/sars2/jdavis/Sarah/${dir}
+
+echo Updating permissions
+ssh -i ~/.ssh/${rsa_file} wilke@locust "echo Changing group ; chgrp -R collab /vol/sars2/jdavis/Sarah/${dir} ; echo Changing permissions ; chmod -R g+w /vol/sars2/jdavis/Sarah/${dir}"
+echo Done `date`

@@ -1,0 +1,45 @@
+header = False
+
+k = data.keys()
+
+# print header
+if header:
+    if metadata :
+        print( "\t".join( ['id' , 'date' , 'location'] )  + "\t" +  "\t".join(k))
+    else:
+        print( "\t".join(k))
+
+
+row = []
+for i in data :
+
+    if isinstance( data[i], str):
+        row += [data[i]]
+    elif isinstance( data[i], list) :
+        row += [",".join(data[i])]
+    elif isinstance( data[i], dict) :
+        tmp = []
+        for k,v in data[i].items() :
+
+row = []
+for i in data :
+
+    if isinstance( data[i], str):
+        row += [data[i]]
+    elif isinstance( data[i], list) :
+        row += [",".join(data[i])]
+    elif isinstance( data[i], dict) :
+        tmp = []
+        for k,v in data[i].items() :
+            tmp += [":".join([ k ,v ])]
+
+        row += [",".join(tmp)]
+    else :
+        print("Error: Unsupported type " + type(data[i] , file=sys.stderr))
+        sys.exit(0)
+
+if metadata :
+    print("\t".join( [ metadata['id'] , metadata['date'] , metadata['location']] + row))
+else:
+    print("\t".join(row))
+return None
