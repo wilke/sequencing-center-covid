@@ -30,8 +30,9 @@ nr_samples=`ls ${covid_run_dir}/bam/ | wc -l`
 echo Processing ${nr_samples}/${nr_assemblies} samples
 
 echo Computing variants and out files `date`
-make -i -j 8 strain
-make -i -j 4 strain
+make update
+make -B -i -j 20 strain
+make -i -j 10 strain 
 echo Done - Computing variants and out files `date`
 
 echo Create coverage and summary
@@ -45,10 +46,13 @@ cat coverage.sorted.txt | cut -f1,2 > coverage.c1.c2
 
 join -t $'\t' -a 1 -a 2 -e 'n/a' -j 1 summary.sorted.tsv coverage.c1.c2 > summary.all.tsv
 
-python3 ${base}/scripts/update-sample-mapping.py -c coverage.all.txt -m ${mapping_file} -s output 2>./summary.error.log 1> ${mapping_file}.updated
+python3 ${base}/scripts/update-sample-mapping.py -c coverage.all.txt -m ${mapping_file} -s output 2>./summary.error.log 1> ${mapping_file}.updated.tsv
 
-echo Moving data for plotting
-python3 ${base}/scripts/samples2aggregates.py --mapping-file ${mapping_file} --sites2labels ${base}/mapping.tsv --source-dir ./ --destination-dir ${base}/aggregate/current/
+echo Creating Pileups
+sh /local/incoming/covid/scripts/create-pileups.sh $run_dir
+
+# echo Moving data for plotting
+# python3 ${base}/scripts/samples2aggregates.py --mapping-file ${mapping_file} --sites2labels ${base}/mapping.tsv --source-dir ./ --destination-dir ${base}/aggregate/current/
 
 cd $current
 echo Done - Processing covid-run folder ${src} `date`
