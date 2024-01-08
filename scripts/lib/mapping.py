@@ -173,7 +173,7 @@ class Mapping(object):
         sites2labels = self.sites
         mapping = {}
 
-        with open(self.file) as f:
+        with open(self.file, encoding='utf-8' , errors='replace') as f:
             header_line = f.readline()
             tags = header_line.strip().split("\t")
 
