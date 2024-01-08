@@ -43,7 +43,8 @@ def parse_demix(dir) -> dict:
             if not id:
                 sys.stderr.write(f"ERROR: No match for {f}\n")
                 continue
-            sys.stderr.write(f'INFO: Processing {f}, id is {id}\n')
+            sys.stderr.write(
+                f'INFO: Processing {f}, id is {id}, path is {fn}\n')
             summary[id] = _parse_demix_file(fn)
     return summary
 
@@ -51,13 +52,14 @@ def parse_demix(dir) -> dict:
 def _parse_demix_file(file) -> dict:
 
     p = re.compile('^\s')
-    t = re.compile('^(summarized|lineages|abundances|resid)\s+(.*)$')
+    t = re.compile('^(summarized|lineages|abundances|resid|coverage)\s+(.*)$')
 
     d = {
         'summarized': {},
         'lineages': [],
         'abundances': [],
-        'resid': ''
+        'resid': '',
+        'coverage': ''
     }
 
     with open(file) as f:
@@ -75,20 +77,25 @@ def _parse_demix_file(file) -> dict:
 
             stripped = l.strip()
             if tag == "summarized":
-                sum = re.findall('\(\'(\w+)\',\s*([\d\.]+)\)', stripped)
+                # sum = re.findall('\(\'(\w+)\',\s*([\d\.]+)\)', stripped)
+                sum = re.findall('\(\'([^\']+)\',\s*([\d\.]+)\)', stripped)
 
                 for pair in sum:
                     d[tag][pair[0]] = pair[1]
 
-            if tag == "lineages":
-                lin = re.findall('([A-Z\.\d]+)', stripped)
+            elif tag == "lineages":
+                # lin = re.findall('([A-Z\.\d]+)', stripped)
+                lin = re.findall('([\w\.\d]+)', stripped)
                 d[tag] += lin
-            if tag == "abundances":
+            elif tag == "abundances":
                 abu = re.findall('([\d\.]+)', stripped)
                 d[tag] += abu
-            if tag == "resid":
+            elif tag == "resid":
                 d[tag] = stripped
-
+            elif tag == 'coverage':
+                d[tag] = stripped
+            else:
+                sys.stderr.write(f'Unknow tag {tag}, how did i get here?\n')
     return d
 
 
@@ -109,9 +116,10 @@ def parse_coverage(file) -> dict:
 
 def merge(mapping=None, coverage=None, summary=None):
 
-    header_base = ["sample_id", "site_id", "sample_collect_date", "wwtp_name"]
+    header_base = ["sample_id", "site_id", "sample_collect_date", "wwtp_name", "N1 (cp/µl)", "N1 (cp/micro_liter)"]
     header_coverage = ["coverage"]
-    header_summary = ['summarized', 'lineages', 'abundances', 'resid']
+    header_summary = ['summarized', 'lineages',
+                      'abundances', 'resid', 'coverage']
     # 'summarized': {'Omicron': '0.9997349999914389'}, 'lineages': ['BA.1'], 'abundances': ['0.999735'], 'resid': '15.978256625525404'}
     if mapping and os.path.isfile(mapping):
         with open(mapping) as f:
