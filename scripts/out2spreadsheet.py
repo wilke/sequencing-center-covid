@@ -115,6 +115,7 @@ def file2meta(filepath, mapping=None) -> dict:
     d = re.match("^(\d{2})(\d{2})(\d{2})", filename)
     i = re.match("^[^-_\.]+\.([^-_\.]+).+\.out", filename)
     # l = re.match("^\d+-(.+)_.*", filename)
+    print(d,i)
     site = mapping.id2site(i[1])
     l = mapping.site2labels(site)
 
