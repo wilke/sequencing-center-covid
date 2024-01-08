@@ -1,6 +1,27 @@
 run_dir=$1
+primer=$2
+
+echo Starting assembly `date`
+
+if [ $primer == qiagen ]
+then
+	echo Setting primer to qiagen
+	primer=qiagen
+elif [ $primer == swift ]
+then
+	echo Setting primer to swift
+	primer=swift
+elif [ $primer == midnight ]
+then
+	echo Setting primer to midnight
+else 
+	echo No primer, setting to qiagen
+fi
+
 current_dir=`pwd`
 base=/local/incoming/covid
+
+image=${base}/config/bvbrc-build-latest.sif
 
 cd ${run_dir}
 
@@ -15,7 +36,7 @@ mkdir -p Consensus
 # ln -s samples reads
 
 echo Starting assembly: `date`
-singularity run --pwd ${base}/runs/${id} -B ${base}/runs/${id}/tmp:/tmp -B ${base}:${base} ${base}/config/bvbrc-build-107.sif "sh ${base}/scripts/local-assembly.sh qiagen ${id}" > ${prefix}.assembly.log 2> ${prefix}.assembly.error
+singularity run --pwd ${base}/runs/${id} -B ${base}/runs/${id}/tmp:/tmp -B ${base}:${base} ${image} "sh ${base}/scripts/local-assembly.sh ${primer} ${id}" > ${prefix}.assembly.log 2> ${prefix}.assembly.error
 echo Assembly done: `date`
 
 #ls Assemblies | perl -e 'while (<>){chomp; my $mcov = $_; system "cp Assemblies/$mcov/$mcov.fasta Consensus/$mcov.fasta";}'
@@ -28,4 +49,5 @@ echo Assembly done: `date`
 # pangolin 220223_Direct_15_16.dna  -o 220223_Direct_15_16.pango
 
 # cut -f5 -d, 220223_Direct_15_16.pango/lineage_report.csv |sort |uniq -c
+echo Finished assembly `date`
 cd ${current_dir}
