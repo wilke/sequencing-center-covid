@@ -1,17 +1,19 @@
+#! /usr/bin/env sh
+
 run_dir=$1
 primer=$2
 
 echo Starting assembly `date`
 
-if [ $primer == qiagen ]
+if [ $primer = qiagen ]
 then
 	echo Setting primer to qiagen
 	primer=qiagen
-elif [ $primer == swift ]
+elif [ $primer = swift ]
 then
 	echo Setting primer to swift
 	primer=swift
-elif [ $primer == midnight ]
+elif [ $primer = midnight ]
 then
 	echo Setting primer to midnight
 else 
@@ -36,7 +38,8 @@ mkdir -p Consensus
 # ln -s samples reads
 
 echo Starting assembly: `date`
-singularity run --pwd ${base}/runs/${id} -B ${base}/runs/${id}/tmp:/tmp -B ${base}:${base} ${image} "sh ${base}/scripts/local-assembly.sh ${primer} ${id}" > ${prefix}.assembly.log 2> ${prefix}.assembly.error
+echo "singularity run --pwd ${base}/runs/${id} -B /nfs/seq-data -B ${base}/runs/${id}/tmp:/tmp -B ${base}:${base} ${image} \"sh ${base}/scripts/local-assembly.sh ${primer} ${id}\""
+singularity run --pwd ${base}/runs/${id} -B /nfs/seq-data -B ${base}/runs/${id}/tmp:/tmp -B ${base}:${base} ${image} "sh ${base}/scripts/local-assembly.sh ${primer} ${id}" > ${prefix}.assembly.log 2> ${prefix}.assembly.error
 echo Assembly done: `date`
 
 #ls Assemblies | perl -e 'while (<>){chomp; my $mcov = $_; system "cp Assemblies/$mcov/$mcov.fasta Consensus/$mcov.fasta";}'

@@ -34,7 +34,7 @@ def find_samples(pattern=None , categories= {} , src=None , dest="/local/incomin
     else :
         print("Searching in " + src + " for " + pattern)
     
-    date =re.compile("^(\d+)/(\d+)/(\d+)")
+    date =re.compile(r"^(\d+)/(\d+)/(\d+)")
     res = date.match(categories['date'])
     
     if res is None :

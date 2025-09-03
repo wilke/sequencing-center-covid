@@ -18,8 +18,8 @@ args = parser.parse_args()
 
 def parse(file) -> dict:
 
-    p = re.compile('^\s')
-    t = re.compile('^(summarized|lineages|abundances|resid)\s+(.*)$')
+    p = re.compile(r'^\s')
+    t = re.compile(r'^(summarized|lineages|abundances|resid)\s+(.*)$')
 
     d = {
         'summarized': {},
@@ -43,16 +43,16 @@ def parse(file) -> dict:
 
             stripped = l.strip()
             if tag == "summarized":
-                sum = re.findall('\(\'(\w+)\',\s*([\d\.]+)\)', stripped)
+                sum = re.findall(r'\(\'(\w+)\',\s*([\d\.]+)\)', stripped)
 
                 for pair in sum:
                     d[tag][pair[0]] = pair[1]
 
             if tag == "lineages":
-                lin = re.findall('([A-Z\.\d]+)', stripped)
+                lin = re.findall(r'([A-Z\.\d]+)', stripped)
                 d[tag] += lin
             if tag == "abundances":
-                abu = re.findall('([\d\.]+)', stripped)
+                abu = re.findall(r'([\d\.]+)', stripped)
                 d[tag] += abu
             if tag == "resid":
                 d[tag] = stripped
@@ -112,8 +112,8 @@ def file2meta(filepath, mapping=None) -> dict:
     filename = os.path.basename(filepath)
     m['file'] = filename
 
-    d = re.match("^(\d{2})(\d{2})(\d{2})", filename)
-    i = re.match("^[^-_\.]+\.([^-_\.]+).+\.out", filename)
+    d = re.match(r"^(\d{2})(\d{2})(\d{2})", filename)
+    i = re.match(r"^[^-_\.]+\.([^-_\.]+).+\.out", filename)
     # l = re.match("^\d+-(.+)_.*", filename)
     print(d,i)
     site = mapping.id2site(i[1])

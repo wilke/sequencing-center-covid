@@ -23,7 +23,7 @@ args = parser.parse_args()
 
 def get_id(f) -> str:
     # i = re.match("^[^-_\.]+\.([^-_\.]+).+\.out", filename)
-    i = re.match("^[^-_\.]+\.([^_\.]+).*", f)
+    i = re.match(r"^[^-_\.]+\.([^_\.]+).*", f)
     id = i[1] if i else None
     return id
 
@@ -51,8 +51,8 @@ def parse_demix(dir) -> dict:
 
 def _parse_demix_file(file) -> dict:
 
-    p = re.compile('^\s')
-    t = re.compile('^(summarized|lineages|abundances|resid|coverage)\s+(.*)$')
+    p = re.compile(r'^\s')
+    t = re.compile(r'^(summarized|lineages|abundances|resid|coverage)\s+(.*)$')
 
     d = {
         'summarized': {},
@@ -78,17 +78,17 @@ def _parse_demix_file(file) -> dict:
             stripped = l.strip()
             if tag == "summarized":
                 # sum = re.findall('\(\'(\w+)\',\s*([\d\.]+)\)', stripped)
-                sum = re.findall('\(\'([^\']+)\',\s*([\d\.]+)\)', stripped)
+                sum = re.findall(r'\(\'([^\']+)\',\s*([\d\.]+)\)', stripped)
 
                 for pair in sum:
                     d[tag][pair[0]] = pair[1]
 
             elif tag == "lineages":
                 # lin = re.findall('([A-Z\.\d]+)', stripped)
-                lin = re.findall('([\w\.\d]+)', stripped)
+                lin = re.findall(r'([\w\.\d]+)', stripped)
                 d[tag] += lin
             elif tag == "abundances":
-                abu = re.findall('([\d\.]+)', stripped)
+                abu = re.findall(r'([\d\.]+)', stripped)
                 d[tag] += abu
             elif tag == "resid":
                 d[tag] = stripped

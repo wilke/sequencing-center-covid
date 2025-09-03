@@ -4,10 +4,10 @@ dir=`basename $1`
 
 primer=$2
 
-if [ $primer == qiagen ]
+if [ "$primer" = "qiagen" ]
 then
         echo Setting primer to ${primer}
-elif [ $primer == swift ]
+elif [ "$primer" = "swift" ]
 then
         echo Setting primer to ${primer}
 else
@@ -41,8 +41,10 @@ find $1 -name "*.sample-mapping.tsv" -exec cp {} ${covid_run_dir}/ \;
 echo Found `ls ${covid_run_dir}/samples/ | wc -l` sequence files
 
 # Assembly
+echo "sh /local/incoming/covid/scripts/assembly.sh ${covid_run_dir} ${primer}"
 sh /local/incoming/covid/scripts/assembly.sh ${covid_run_dir} ${primer}
 
+echo "sh /local/incoming/covid/scripts/process-run.sh ${covid_run_dir}"
 sh /local/incoming/covid/scripts/process-run.sh ${covid_run_dir}
 
 # Create plots

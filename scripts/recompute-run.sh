@@ -14,7 +14,7 @@ time_suffix=`date +"%Y%m%d-%H%M"`
 
 echo Processing covid-run folder ${src} `date`
 
-if [ ${time_suffix} == '' ] 
+if [ "${time_suffix}" = "" ] 
 then
 	echo Something wrong with suffix: ${time_suffix}
 	exit 1
@@ -57,7 +57,7 @@ cat coverage.sorted.txt | cut -f1,2 > coverage.c1.c2
 
 join -t $'\t' -a 1 -a 2 -e 'n/a' -j 1 summary.sorted.tsv coverage.c1.c2 > summary.all.tsv
 
-python3 ${base}/scripts/update-sample-mapping.py -c coverage.all.txt -m ${mapping_file} -s output 2>./summary.error.log 1> ${mapping_file}.${time_suffix}
+python3 ${base}/scripts/update-sample-mapping.py -c coverage.all.txt -m ${mapping_file} -s output 2>./summary.error.log 1> ${mapping_file}.recomputed.${time_suffix}.tsv
 
 # echo Creating Pileups
 # sh /local/incoming/covid/scripts/create-pileups.sh $run_dir
