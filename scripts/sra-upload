@@ -114,10 +114,12 @@ BIOSAMPLE=`find ${RUN_FOLDER} -iname "*.biosample.tmpl.tsv"`
 SITES=`find ${RUN_FOLDER} -iname "*SiteID*.tsv"`
 IDPH=`find ${RUN_FOLDER} -iname "*IDPH.csv"`
 CDPH=`find ${RUN_FOLDER} -iname "*CDPH.csv"`
+ORD=`find ${RUN_FOLDER} -iname "*ord.samples.csv"`
+
 
 STOP=0 
 # Check if only one file has been found
-for i in RUN BIOSAMPLE SITES IDPH CDPH
+for i in RUN BIOSAMPLE SITES IDPH CDPH ORD
 do
 
     c=`echo ${!i} | wc -w`
@@ -176,7 +178,7 @@ else
 fi
 
 echo ${HEADER} > ${RUN_FOLDER}/SRA/samples.csv
-SAMPLES=`cat $IDPH $CDPH | grep -v sample_id >> ${RUN_FOLDER}/SRA/samples.csv ; echo ${RUN_FOLDER}/SRA/samples.csv`
+SAMPLES=`cat $IDPH $CDPH $ORD | grep -v sample_id >> ${RUN_FOLDER}/SRA/samples.csv ; echo ${RUN_FOLDER}/SRA/samples.csv`
 
 DOCKER=`which docker`
 SINGULARITY=`which singularity`
