@@ -4,6 +4,10 @@ dir=`basename $1`
 
 primer=$2
 
+# Optional Freyja version parameter (backward compatible)
+# Priority: CLI argument > FREYJA_VERSION env var > "latest" default
+freyja_version=${3:-${FREYJA_VERSION:-latest}}
+
 if [ "$primer" = "qiagen" ]
 then
         echo Setting primer to ${primer}
@@ -11,12 +15,24 @@ elif [ "$primer" = "swift" ]
 then
         echo Setting primer to ${primer}
 else
-        echo No primer, please specify either qiagen or swift
-        exit
+        echo "No primer specified. Usage: $0 <dir> <primer> [freyja_version]"
+        echo "Primers: qiagen, swift"
+        echo "Example: $0 /path/to/run swift 2.0.0"
+        exit 1
 fi
 
-echo Starting pipeline `date`
-echo Creating $dir
+# Validate Freyja version exists
+freyja_container="/local/incoming/covid/config/freyja_${freyja_version}.sif"
+if [ ! -f "${freyja_container}" ]; then
+        echo "ERROR: Freyja version '${freyja_version}' not found at ${freyja_container}"
+        echo "Available versions:"
+        ls -1 /local/incoming/covid/config/freyja_*.sif 2>/dev/null | sed 's/.*freyja_/  - /' | sed 's/.sif//'
+        exit 1
+fi
+
+echo "Starting pipeline `date`"
+echo "Creating $dir"
+echo "Using Freyja version: ${freyja_version}"
 
 covid_run_dir=/local/incoming/covid/runs/${dir}/
 export_dir=/vol/sars2/jdavis/Sarah/
@@ -44,7 +60,9 @@ echo Found `ls ${covid_run_dir}/samples/ | wc -l` sequence files
 echo "sh /local/incoming/covid/scripts/assembly.sh ${covid_run_dir} ${primer}"
 sh /local/incoming/covid/scripts/assembly.sh ${covid_run_dir} ${primer}
 
-echo "sh /local/incoming/covid/scripts/process-run.sh ${covid_run_dir}"
+# Export version for process-run.sh and Makefile to use
+export FREYJA_VERSION=${freyja_version}
+echo "FREYJA_VERSION=${freyja_version} sh /local/incoming/covid/scripts/process-run.sh ${covid_run_dir}"
 sh /local/incoming/covid/scripts/process-run.sh ${covid_run_dir}
 
 # Create plots
@@ -54,4 +72,5 @@ sh /local/incoming/covid/scripts/process-run.sh ${covid_run_dir}
 # time make -i -j 20 plots > ${prefix}.plotting.out 2> ${prefix}.plotting.error 
 # mkdir -p /local/incoming/covid/aggregate/${prefix}
 # cp -r /local/incoming/covid/aggregate/current/* /local/incoming/covid/aggregate/${prefix}/
-echo Done pipeline `date`
+echo "Done pipeline `date`"
+echo "Freyja version used: ${freyja_version}"
