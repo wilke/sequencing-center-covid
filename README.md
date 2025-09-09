@@ -15,6 +15,9 @@ Scripts for processing assemblies, creating plots and reports
 ```bash
 # Standard execution (uses latest Freyja version)
 ./scripts/process-covid-run /path/to/sequencing/run qiagen
+
+# Supported primers: qiagen, swift, midnight
+./scripts/process-covid-run /path/to/sequencing/run midnight
 ```
 
 ### Freyja Version Control (new)
@@ -32,9 +35,10 @@ make FREYJA_VERSION=2.0.0-09_08_2025-00-34-2025-09-08 strain
 ```
 
 ### Available Freyja Versions
-- `latest` - Current production version (symlink to 1.5.3)
-- `1.5.3-07_14_2025-00-44-2025-07-14` - Stable version from July 2025
-- `2.0.0-09_08_2025-00-34-2025-09-08` - Latest version with ampliconstat feature
+- `latest` - Current production version (symlink to 2.0.0)
+- `2.0.0-09_08_2025-00-34-2025-09-08` - Current latest with ampliconstat feature
+- `1.5.3-07_14_2025-00-44-2025-07-14` - Previous stable version from July 2025
+- `1.5.2-01_06_2025-02-03-2025-01-06` - Earlier version available
 
 ### Version Comparison Experiments
 ```bash
