@@ -14,10 +14,13 @@ then
 elif [ "$primer" = "swift" ]
 then
         echo Setting primer to ${primer}
+elif [ "$primer" = "midnight" ]
+then
+        echo Setting primer to ${primer}
 else
         echo "No primer specified. Usage: $0 <dir> <primer> [freyja_version]"
-        echo "Primers: qiagen, swift"
-        echo "Example: $0 /path/to/run swift 2.0.0"
+        echo "Primers: qiagen, swift, midnight"
+        echo "Example: $0 /path/to/run swift 2.0.0-09_08_2025-00-34-2025-09-08"
         exit 1
 fi
 
