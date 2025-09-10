@@ -1,0 +1,186 @@
+BASE := /local/incoming/covid/
+BAMS := $(wildcard bam/*.bam)
+VARIANTS :=$(patsubst bam/%.sorted.bam,variants/%.variants.tsv,$(BAMS))
+
+# Version configuration with precedence: CLI > ENV > default
+FREYJA_VERSION ?= latest
+
+# Direct path construction - no mapping
+SINGULARITY := /local/incoming/covid/config/freyja_$(FREYJA_VERSION).sif
+
+# Database and reference paths remain unchanged
+BARCODES := /local/incoming/covid/config/usher_barcodes.feather
+LINEAGES := /local/incoming/covid/config/lineages.yml
+CURATED_LINEAGES := /local/incoming/covid/config/curated_lineages.json
+CURATED_LINEAGES_TARGET := /opt/conda/envs/freyja-env/lib/python3.10/site-packages/freyja/data/
+CUTOFF := 0
+BIND := --bind /local/incoming/covid/ --bind /nfs/seq-data/covid/
+REFERENCE := /local/incoming/covid/config/MN908947.3.trimmed.fa
+
+# Version validation and provenance tracking
+.PHONY: validate-version
+validate-version:
+	@if [ ! -f "$(SINGULARITY)" ]; then \
+		echo "ERROR: Freyja container not found: $(SINGULARITY)"; \
+		echo ""; \
+		echo "Available versions:"; \
+		ls -1 /local/incoming/covid/config/freyja_*.sif 2>/dev/null | sed 's/.*freyja_/  - /' | sed 's/.sif//' || echo "  No Freyja containers found"; \
+		exit 1; \
+	fi
+	@if [ "$(FREYJA_VERSION)" = "latest" ]; then \
+		if [ ! -L "$(SINGULARITY)" ]; then \
+			echo "ERROR: freyja_latest.sif exists but is not a symlink"; \
+			echo "This violates the versioning policy for reproducibility"; \
+			exit 1; \
+		fi; \
+		echo "Using latest symlink: $(SINGULARITY) -> $$(readlink $(SINGULARITY))"; \
+	else \
+		if [ -L "$(SINGULARITY)" ]; then \
+			echo "WARNING: freyja_$(FREYJA_VERSION).sif is a symlink, expected actual file"; \
+			echo "Resolves to: $$(readlink -f $(SINGULARITY))"; \
+		fi; \
+	fi
+
+# Provenance tracking
+.PHONY: record-provenance
+record-provenance: validate-version
+	@mkdir -p logs provenance
+	$(eval ACTUAL_VERSION := $(shell if [ -L "$(SINGULARITY)" ]; then readlink -f $(SINGULARITY) | sed 's/.*freyja_//' | sed 's/.sif//'; else echo $(FREYJA_VERSION); fi))
+	$(eval CONTAINER_MD5 := $(shell md5sum $(SINGULARITY) 2>/dev/null | cut -d' ' -f1))
+	$(eval RUN_ID := $(shell date +"%Y%m%d_%H%M%S")_$$RANDOM)
+	@echo "Recording provenance for run $(RUN_ID)"
+	@cat > provenance/freyja_run_$(RUN_ID).json <<EOF
+	{
+	  "run_id": "$(RUN_ID)",
+	  "timestamp": "$$(date -Iseconds)",
+	  "requested_version": "$(FREYJA_VERSION)",
+	  "actual_version": "$(ACTUAL_VERSION)",
+	  "container_path": "$(SINGULARITY)",
+	  "resolved_path": "$$(readlink -f $(SINGULARITY))",
+	  "container_md5": "$(CONTAINER_MD5)",
+	  "container_size": "$$(stat -c%s $(SINGULARITY) 2>/dev/null)",
+	  "is_symlink": $$(if [ -L "$(SINGULARITY)" ]; then echo "true"; else echo "false"; fi),
+	  "user": "$$(whoami)",
+	  "hostname": "$$(hostname)",
+	  "pwd": "$$(pwd)"
+	}
+	EOF
+	@echo "Provenance recorded: provenance/freyja_run_$(RUN_ID).json"
+	@echo "$$(date '+%Y-%m-%d %H:%M:%S') | Run: $(RUN_ID) | Requested: $(FREYJA_VERSION) | Actual: $(ACTUAL_VERSION) | Path: $$(readlink -f $(SINGULARITY))" >> logs/freyja_version_history.log
+
+# Version info display
+.PHONY: version-info
+version-info: validate-version
+	@echo "=== Freyja Version Information ==="
+	@echo "Requested version: $(FREYJA_VERSION)"
+	@echo "Container path: $(SINGULARITY)"
+	@if [ -L "$(SINGULARITY)" ]; then \
+		echo "Symlink target: $$(readlink $(SINGULARITY))"; \
+		echo "Resolved path: $$(readlink -f $(SINGULARITY))"; \
+		ACTUAL_FILE=$$(readlink -f $(SINGULARITY)); \
+		ACTUAL_VERSION=$$(echo $$ACTUAL_FILE | sed 's/.*freyja_//' | sed 's/.sif//'); \
+		echo "Actual version: $$ACTUAL_VERSION"; \
+	else \
+		echo "Direct file (not a symlink)"; \
+	fi
+	@echo "Container size: $$(ls -lh $(SINGULARITY) | awk '{print $$5}')"
+	@echo "Container date: $$(ls -l $(SINGULARITY) | awk '{print $$6, $$7, $$8}')"
+	@echo "MD5 checksum: $$(md5sum $(SINGULARITY) | cut -d' ' -f1)"
+	@echo "==================================="
+
+call: variants/%.variants.tsv
+
+.PHONY: update
+update: record-provenance
+	$(eval d:=$(shell date +"%Y-%m-%d"))
+	@echo "Updating Freyja databases using version: $(FREYJA_VERSION)"
+	singularity run $(BIND) $(SINGULARITY) freyja update --outdir $(BASE)/config/
+	cp $(BASE)/config/usher_barcodes.feather $(BASE)/config/usher_barcodes.${d}.feather
+	chmod a+w $(BASE)/config/usher_barcodes.feather
+	@echo "Database update completed with Freyja $(FREYJA_VERSION)"
+
+strain: record-provenance $(VARIANTS)
+	@echo "Pipeline completed with Freyja $(FREYJA_VERSION)"
+	@echo "Provenance recorded in: provenance/"
+
+depth/%.depth: bam/*.sorted.bam
+	singularity run docker://wilke/freyja:latest ls $@
+
+bam/%.sorted.bam: 
+	echo BAM $@
+
+variants/%.variants.tsv: bam/%.sorted.bam validate-version
+	@echo "Processing $* with Freyja $(FREYJA_VERSION)"
+	$(eval sample:=$(shell basename $@ .variants.tsv))
+	$(eval ACTUAL_VERSION := $(shell if [ -L "$(SINGULARITY)" ]; then readlink -f $(SINGULARITY) | sed 's/.*freyja_//' | sed 's/.sif//'; else echo $(FREYJA_VERSION); fi))
+	singularity run $(BIND) $(SINGULARITY) freyja variants bam/${sample}.sorted.bam --variants variants/${sample}.variants --depths depth/${sample}.depth --ref $(REFERENCE)
+	@echo $(shell if [ -f variants/${sample}.variants.tsv ] ; then echo "Found variants/${sample}.variants.tsv" ; else touch variants/${sample}.variants.missing ; echo "Missing variants/${sample}.variants.tsv" ; fi )
+	singularity exec $(BIND) $(SINGULARITY) freyja demix --depthcutoff $(CUTOFF) --lineageyml $(LINEAGES) --meta $(CURATED_LINEAGES) --barcodes $(BARCODES) --output output/${sample}.out variants/${sample}.variants.tsv depth/${sample}.depth
+	@# Write version metadata for each sample
+	@echo "freyja_requested=$(FREYJA_VERSION)" > output/${sample}.version
+	@echo "freyja_actual=$(ACTUAL_VERSION)" >> output/${sample}.version
+	@echo "freyja_container=$$(readlink -f $(SINGULARITY))" >> output/${sample}.version
+	@echo "processed_date=$$(date -Iseconds)" >> output/${sample}.version
+
+# List available versions
+.PHONY: list-versions
+list-versions:
+	@echo "Available Freyja versions:"
+	@echo "========================="
+	@for file in /local/incoming/covid/config/freyja_*.sif; do \
+		if [ -f "$$file" ]; then \
+			basename $$file | sed 's/freyja_//' | sed 's/.sif//'; \
+			if [ -L "$$file" ]; then \
+				echo "  (symlink -> $$(readlink $$file))"; \
+			fi; \
+		fi; \
+	done
+	@echo ""
+	@echo "Current 'latest' points to:"
+	@if [ -L "/local/incoming/covid/config/freyja_latest.sif" ]; then \
+		readlink /local/incoming/covid/config/freyja_latest.sif; \
+	else \
+		echo "  ERROR: 'latest' is not properly configured as a symlink"; \
+	fi
+
+# Clean provenance older than 30 days (optional maintenance)
+.PHONY: clean-old-provenance
+clean-old-provenance:
+	@echo "Cleaning provenance files older than 30 days..."
+	@find provenance -name "freyja_run_*.json" -mtime +30 -delete 2>/dev/null || true
+	@echo "Cleanup completed"
+
+# Help target
+.PHONY: help
+help:
+	@echo "COVID Pipeline Makefile - Freyja Version Control"
+	@echo "================================================"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make strain                        # Run with default (latest)"
+	@echo "  make strain FREYJA_VERSION=2.0.0   # Run with specific version"
+	@echo "  make strain FREYJA_VERSION=latest  # Explicitly use latest"
+	@echo "  FREYJA_VERSION=1.5.3 make strain   # Set via environment variable"
+	@echo ""
+	@echo "Targets:"
+	@echo "  strain           - Run variant calling pipeline"
+	@echo "  update           - Update Freyja databases"
+	@echo "  version-info     - Display current version information"
+	@echo "  list-versions    - Show all available Freyja versions"
+	@echo "  validate-version - Verify specified version exists"
+	@echo "  record-provenance - Record run metadata for audit trail"
+	@echo "  help             - Show this help message"
+	@echo ""
+	@echo "Version Control:"
+	@echo "  - Version precedence: Command line > Environment > Default (latest)"
+	@echo "  - 'latest' must be a symlink to ensure reproducibility"
+	@echo "  - All runs are logged with full provenance tracking"
+	@echo "  - Version metadata is saved with each sample output"
+	@echo ""
+	@echo "Provenance:"
+	@echo "  - Run metadata: provenance/freyja_run_*.json"
+	@echo "  - Version history: logs/freyja_version_history.log"
+	@echo "  - Sample versions: output/*.version"
+
+# Default target
+.DEFAULT_GOAL := help
