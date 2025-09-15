@@ -1,6 +1,23 @@
-#! /usr/bin/env sh 
+#! /usr/bin/env sh
+
+# Exit on any error
+set -e
+
+# Check if required arguments are provided
+if [ $# -lt 2 ]; then
+    echo "ERROR: Missing required arguments"
+    echo "Usage: $0 <directory> <primer> [freyja_version]"
+    echo "Example: $0 /path/to/run qiagen 2.0.0"
+    exit 1
+fi
 
 dir=`basename $1`
+
+# Validate directory path
+if [ ! -d "$1" ]; then
+    echo "ERROR: Directory '$1' does not exist"
+    exit 1
+fi
 
 primer=$2
 
