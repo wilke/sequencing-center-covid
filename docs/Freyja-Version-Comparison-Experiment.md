@@ -4,6 +4,14 @@
 
 This document outlines a comprehensive experiment to evaluate and compare different Freyja versions (1.5.3 vs 2.0.0) within the COVID sequencing pipeline to assess performance, accuracy, and compatibility implications for production deployment.
 
+### Test Results Summary (2025-09-15)
+
+**Initial Validation Complete**:
+- ✅ Created validation script for version testing
+- ✅ Established GitHub issues for tracking (#13-#16)
+- ✅ Confirmed container availability for both versions
+- 🔄 Performance benchmarking in progress
+
 ## Task Definition
 
 **Objective**: Systematically evaluate Freyja v1.5.3 and v2.0.0 to determine optimal version for production COVID surveillance pipeline.
@@ -208,14 +216,14 @@ process-covid-run-v2.0.0
 ### Step 1: Environment Preparation
 ```bash
 # Create experiment directory structure
-mkdir -p /nfs/seq-data/covid/freyja-comparison/{v1.5.3,v2.0.0,analysis,logs}
+mkdir -p /nfs/seq-data/covid/tmp/freyja-comparison/{v1.5.3,v2.0.0,analysis,logs}
 
 # Verify container availability
 ls -lh /local/incoming/covid/config/freyja*.sif
 
 # Create modified Makefiles
-cp /local/incoming/covid/config/Makefile /nfs/seq-data/covid/freyja-comparison/Makefile.v1.5.3
-cp /local/incoming/covid/config/Makefile /nfs/seq-data/covid/freyja-comparison/Makefile.v2.0.0
+cp /local/incoming/covid/config/Makefile /nfs/seq-data/covid/tmp/freyja-comparison/Makefile.v1.5.3
+cp /local/incoming/covid/config/Makefile /nfs/seq-data/covid/tmp/freyja-comparison/Makefile.v2.0.0
 ```
 
 ### Step 2: Makefile Modifications
