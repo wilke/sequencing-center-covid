@@ -4,13 +4,15 @@
 
 This document outlines a comprehensive experiment to evaluate and compare different Freyja versions (1.5.3 vs 2.0.0) within the COVID sequencing pipeline to assess performance, accuracy, and compatibility implications for production deployment.
 
-### Test Results Summary (2025-09-15)
+### Test Results Summary (2025-09-16)
 
-**Initial Validation Complete**:
+**Full Experiment Complete**:
 - ✅ Created validation script for version testing
-- ✅ Established GitHub issues for tracking (#13-#16)
+- ✅ Established GitHub issues for tracking (#13-#16, #21-#22)
 - ✅ Confirmed container availability for both versions
-- 🔄 Performance benchmarking in progress
+- ✅ Processed 592 production samples
+- ✅ Achieved 92.72% concordance between versions
+- ✅ Complete experiment archived in `experiments/freyja-v1.5.3-v2.0.0-comparison/`
 
 ## Task Definition
 
@@ -213,75 +215,54 @@ process-covid-run-v2.0.0
 
 ## Implementation Steps
 
+### Actual Implementation (2025-09-16)
+
+We successfully implemented **Option 3: Sequential Testing with Existing Makefile**:
+
 ### Step 1: Environment Preparation
 ```bash
 # Create experiment directory structure
-mkdir -p /nfs/seq-data/covid/tmp/freyja-comparison/{v1.5.3,v2.0.0,analysis,logs}
+mkdir -p /nfs/seq-data/covid/tmp/freyja_experiment/{v1.5.3,v2.0.0,scripts,analysis,logs}
 
 # Verify container availability
 ls -lh /local/incoming/covid/config/freyja*.sif
 
-# Create modified Makefiles
-cp /local/incoming/covid/config/Makefile /nfs/seq-data/covid/tmp/freyja-comparison/Makefile.v1.5.3
-cp /local/incoming/covid/config/Makefile /nfs/seq-data/covid/tmp/freyja-comparison/Makefile.v2.0.0
+# No Makefile modifications needed - used parameterization approach
 ```
 
-### Step 2: Makefile Modifications
+### Step 2: Sample Selection
 ```bash
-# For v1.5.3
-sed -i 's|freyja_latest.sif|freyja.1.5.3-07_14_2025-00-44-2025-07-14.sif|g' Makefile.v1.5.3
+# Generated 592 samples from 12 most recent runs
+python3 scripts/generate_sample_list.py
 
-# For v2.0.0
-sed -i 's|freyja_latest.sif|freyja_2.0.0-09_08_2025-00-34-2025-09-08.sif|g' Makefile.v2.0.0
+# Copied BAM files (not symlinks due to container requirements)
+python3 scripts/propagate_bam_files.py
 ```
 
-### Step 3: Wrapper Script Creation
+### Step 3: Sequential Execution with Version Parameterization
 ```bash
 #!/bin/bash
-# run-freyja-comparison.sh
+# run_freyja_comparison.sh
 
-RUN_DIR=$1
-PRIMER=$2
-VERSION=$3
+# Use explicit version numbers, not symlinks
+V1_VERSION="1.5.3-03_07_2025-01-59-2025-03-10"
+V2_VERSION="2.0.0-09_08_2025-00-34-2025-09-08"
 
-echo "Running Freyja comparison for version ${VERSION}"
+# Run v1.5.3 with forced rebuild
+make -B -i -j 20 -f /local/incoming/covid/config/Makefile \
+    FREYJA_VERSION=$V1_VERSION strain
 
-# Set container based on version
-if [ "$VERSION" = "1.5.3" ]; then
-    export FREYJA_CONTAINER="freyja.1.5.3-07_14_2025-00-44-2025-07-14.sif"
-elif [ "$VERSION" = "2.0.0" ]; then
-    export FREYJA_CONTAINER="freyja_2.0.0-09_08_2025-00-34-2025-09-08.sif"
-fi
-
-# Run pipeline with specific version
-./process-covid-run-modified ${RUN_DIR} ${PRIMER}
+# Run v2.0.0 with forced rebuild
+make -B -i -j 20 -f /local/incoming/covid/config/Makefile \
+    FREYJA_VERSION=$V2_VERSION strain
 ```
 
-### Step 4: Parallel Execution
-```bash
-# Run both versions on same dataset
-./run-freyja-comparison.sh /path/to/samples qiagen 1.5.3 &
-./run-freyja-comparison.sh /path/to/samples qiagen 2.0.0 &
-wait
-```
-
-### Step 5: Comparison Analysis
+### Step 4: Comparison Analysis
 ```python
-# compare_freyja_results.py
-import pandas as pd
-import numpy as np
-from scipy.stats import pearsonr
-
-# Load results from both versions
-v1_results = pd.read_csv('results_v1.5.3/summary.tsv', sep='\t')
-v2_results = pd.read_csv('results_v2.0.0/summary.tsv', sep='\t')
-
-# Calculate concordance metrics
-concordance = calculate_concordance(v1_results, v2_results)
-performance = compare_performance(v1_logs, v2_logs)
-
-# Generate comparison report
-generate_report(concordance, performance)
+# analyze_comparison.py - Fixed parser for Freyja output format
+# Correctly extracts lineages from line 2 and abundances from line 3
+concordance = 92.72%  # 549/592 samples
+discordant = 43 samples (identical abundances, different dominant calls)
 ```
 
 ## Pros and Cons Analysis
@@ -381,38 +362,44 @@ generate_report(concordance, performance)
 | 2 | Performance Analysis | Benchmark results |
 | 3 | Edge Cases & Validation | Final recommendation |
 
-## Expected Outcomes
+## Actual Results (2025-09-16)
 
-### Best Case Scenario
-- v2.0.0 shows improved performance (20-30% faster)
-- 100% lineage calling concordance
-- Reduced memory footprint
-- Enhanced error handling
+### Processing Outcomes
+- **v1.5.3**: 592/592 samples processed successfully (100%)
+- **v2.0.0**: 591/592 samples processed successfully (99.83%)
+- **Failed Sample**: 20250805.112247_S24 (coverage: 4.28x)
 
-### Likely Scenario
-- Minor performance differences (<10%)
-- >95% concordance with explainable differences
-- Similar resource usage
-- Decision based on feature availability
+### Concordance Results
+- **Overall Concordance**: 92.72% (549/592 samples)
+- **Discordant Samples**: 43 (7.28%)
+- **Pattern**: All discordant samples had identical lineage abundances but different dominant lineage calls
+- **Jaccard Similarity**: 1.0 for all discordant samples (complete lineage set overlap)
 
-### Worst Case Scenario
-- Breaking changes requiring code modifications
-- Significant result discrepancies
-- Performance degradation
-- Recommendation to stay on v1.5.3
+### Key Findings
+1. **High Agreement**: 92.72% concordance validates version compatibility
+2. **Tie-Breaking Difference**: Discordances due to different algorithms for selecting dominant lineage when abundances are equal
+3. **Low Coverage Handling**: Both versions struggle with <5x coverage samples
+4. **No Breaking Changes**: Command syntax and output formats fully compatible
 
-## Recommendations
+## Recommendations (Updated Based on Results)
 
-1. **Immediate Action**: Implement Makefile parameterization for flexible testing
-2. **Short Term**: Run parallel comparison on 100-sample validation set
-3. **Medium Term**: Develop automated comparison framework
-4. **Long Term**: Establish version testing protocol for future updates
+1. **Version Selection**: Either v1.5.3 or v2.0.0 suitable for production (92.72% concordance)
+2. **Tie-Breaking Documentation**: Document different tie-breaking behaviors for result interpretation
+3. **Coverage Filtering**: Implement minimum coverage threshold (>10x recommended)
+4. **Transition Strategy**: Can safely upgrade to v2.0.0 with documented caveats
+5. **Archive Location**: Complete experiment archived at `experiments/freyja-v1.5.3-v2.0.0-comparison/`
 
 ## Conclusion
 
-The proposed experiment provides a low-risk, high-value approach to evaluating Freyja versions. The parallel execution framework ensures production stability while enabling comprehensive comparison. The minimal code changes required (primarily Makefile modifications) make this experiment both feasible and reversible.
+The completed experiment successfully demonstrated high concordance (92.72%) between Freyja v1.5.3 and v2.0.0 on 592 production samples. The sequential testing approach with Makefile parameterization proved effective and efficient.
 
-**Recommended Implementation**: Start with Makefile parameterization approach, run parallel comparisons on test datasets, and gradually scale to production volumes based on initial results.
+**Key Outcomes**:
+- No breaking changes between versions
+- Discordances limited to tie-breaking in dominant lineage selection
+- Both versions suitable for production use
+- Complete reproducible experiment archived for future reference
+
+**Implementation Success**: The Option 3 approach (Sequential Testing with Existing Makefile) provided clean, reproducible results with minimal infrastructure changes.
 
 ## Appendix: Implementation Scripts
 
