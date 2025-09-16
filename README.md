@@ -35,19 +35,26 @@ make FREYJA_VERSION=2.0.0-09_08_2025-00-34-2025-09-08 strain
 ```
 
 ### Available Freyja Versions
-- `latest` - Current production version (symlink to 2.0.0)
-- `2.0.0-09_08_2025-00-34-2025-09-08` - Current latest with ampliconstat feature
-- `1.5.3-07_14_2025-00-44-2025-07-14` - Previous stable version from July 2025
-- `1.5.2-01_06_2025-02-03-2025-01-06` - Earlier version available
+- `latest` - Current production version (symlink)
+- `2.0.0-09_08_2025-00-34-2025-09-08` - Latest version with ampliconstat feature
+- `1.5.3-03_07_2025-01-59-2025-03-10` - Stable version (92.72% concordance with v2.0.0)
+- Additional versions in `/local/incoming/covid/config/`
 
-### Version Comparison Experiments
+📖 **[Detailed Freyja Version Usage Guide](docs/FREYJA_VERSION_USAGE.md)**
+
+### Version Selection Priority
+
+1. Command-line argument (highest)
+2. FREYJA_VERSION environment variable
+3. Default 'latest' symlink
+
+### Quick Version Check
 ```bash
-# Run same samples with different versions for comparison
-FREYJA_VERSION=1.5.3-07_14_2025-00-44-2025-07-14 make strain
-mv output output_v1.5.3
+# List available versions
+ls -1 /local/incoming/covid/config/freyja_*.sif | sed 's/.*freyja_//' | sed 's/.sif//'
 
-FREYJA_VERSION=2.0.0-09_08_2025-00-34-2025-09-08 make strain
-mv output output_v2.0.0
+# Check what 'latest' points to
+readlink /local/incoming/covid/config/freyja_latest.sif
 
 # Compare results
 diff output_v1.5.3/sample.out output_v2.0.0/sample.out
