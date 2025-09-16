@@ -13,6 +13,10 @@ base=/local/incoming/covid/
 
 echo Processing covid-run folder ${src} `date`
 
+# Use FREYJA_VERSION if set, otherwise default to 'latest'
+FREYJA_VERSION=${FREYJA_VERSION:-latest}
+echo "Using Freyja version: ${FREYJA_VERSION}"
+
 echo Moving bam files
 find ${covid_run_dir}/Assemblies -name *.sorted.bam -exec mv {} ${covid_run_dir}/staging/ \;
 # find ${covid_run_dir}/Assemblies -name *.sorted.bam -exec mv {} ${covid_run_dir}/bam/ \;
@@ -29,10 +33,10 @@ python3 ${base}/scripts/staging2bam.py -m ${mapping_file} -s ./staging/ -d ./bam
 nr_samples=`ls ${covid_run_dir}/bam/ | wc -l`
 echo Processing ${nr_samples}/${nr_assemblies} samples
 
-echo Computing variants and out files `date`
-make update
-make -B -i -j 20 strain
-make -i -j 10 strain 
+echo "Computing variants and out files with Freyja ${FREYJA_VERSION}" `date`
+make update FREYJA_VERSION=${FREYJA_VERSION}
+make -B -i -j 20 strain FREYJA_VERSION=${FREYJA_VERSION}
+make -i -j 10 strain FREYJA_VERSION=${FREYJA_VERSION} 
 echo Done - Computing variants and out files `date`
 
 echo Create coverage and summary

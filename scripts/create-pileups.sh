@@ -3,8 +3,12 @@
 run_dir=$1
 src=`basename ${run_dir}`
 
-container=/local/incoming/covid/config/freyja_latest.sif
+# Use FREYJA_VERSION if set, otherwise default to 'latest'
+FREYJA_VERSION=${FREYJA_VERSION:-latest}
+container=/local/incoming/covid/config/freyja_${FREYJA_VERSION}.sif
 script=/local/incoming/covid/scripts/parse_pileup-v12.pl
+
+echo "Using Freyja version: ${FREYJA_VERSION}"
 
 cd $run_dir
 mkdir -p tmp

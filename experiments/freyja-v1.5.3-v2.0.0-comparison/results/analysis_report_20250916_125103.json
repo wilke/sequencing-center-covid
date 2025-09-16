@@ -1,0 +1,28 @@
+{
+  "experiment": "Freyja v1.5.3 vs v2.0.0 Comparison",
+  "analysis_date": "2025-09-16T12:51:03.527818",
+  "missing_samples": {
+    "only_in_v1": [
+      "20250805.112247_S24"
+    ],
+    "only_in_v2": [],
+    "common_samples": 591,
+    "v1_total": 592,
+    "v2_total": 591
+  },
+  "concordance_metrics": {
+    "total_samples_compared": 591,
+    "dominant_lineage_concordance": 92.72419627749578,
+    "mean_jaccard_similarity": 0.9990264013106652,
+    "samples_with_perfect_match": "587",
+    "samples_with_different_dominant": "43",
+    "mean_lineages_v1": 13.839255499153976,
+    "mean_lineages_v2": 13.846023688663282
+  },
+  "summary": {
+    "total_samples_analyzed": 591,
+    "concordance_rate": "92.72%",
+    "discordant_samples": 44,
+    "mean_similarity": "0.999"
+  }
+}

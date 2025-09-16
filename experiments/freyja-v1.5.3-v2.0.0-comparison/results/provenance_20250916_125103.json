@@ -1,0 +1,104 @@
+{
+  "analysis_timestamp": "2025-09-16T12:51:02.948817",
+  "script": "/nfs/seq-data/covid/tmp/freyja_experiment/scripts/analyze_comparison.py",
+  "base_directory": "/nfs/seq-data/covid/tmp/freyja_experiment",
+  "versions_compared": {
+    "v1": "1.5.3-03_07_2025-01-59-2025-03-10",
+    "v2": "2.0.0-09_08_2025-00-34-2025-09-08"
+  },
+  "inputs": {
+    "v1_output_count": 592,
+    "v2_output_count": 591,
+    "v1_samples": [
+      "20250725.111216_S41",
+      "20250624.112092_S24",
+      "20250623.109228_S5",
+      "20250702.111163_S95",
+      "20250715.112936_S31"
+    ],
+    "v2_samples": [
+      "20250725.111216_S41",
+      "20250624.112092_S24",
+      "20250623.109228_S5",
+      "20250702.111163_S95",
+      "20250715.112936_S31"
+    ]
+  },
+  "outputs": {
+    "comparison_csv": "/nfs/seq-data/covid/tmp/freyja_experiment/analysis/comparison_results_20250916_125103.csv",
+    "discordant_csv": "/nfs/seq-data/covid/tmp/freyja_experiment/analysis/discordant_samples_20250916_125103.csv",
+    "report_json": "/nfs/seq-data/covid/tmp/freyja_experiment/analysis/analysis_report_20250916_125103.json"
+  },
+  "metrics": {
+    "sample_overlap": {
+      "only_in_v1": [
+        "20250805.112247_S24"
+      ],
+      "only_in_v2": [],
+      "common_samples": 591,
+      "v1_total": 592,
+      "v2_total": 591
+    },
+    "concordance": {
+      "total_samples_compared": 591,
+      "dominant_lineage_concordance": 92.72419627749578,
+      "mean_jaccard_similarity": 0.9990264013106652,
+      "samples_with_perfect_match": "587",
+      "samples_with_different_dominant": "43",
+      "mean_lineages_v1": 13.839255499153976,
+      "mean_lineages_v2": 13.846023688663282
+    },
+    "discordant_samples": {
+      "count": 44,
+      "threshold": 0.8,
+      "different_dominant": "43",
+      "low_similarity": "1",
+      "samples": [
+        "20250622.110711_S8",
+        "20250623.109228_S5",
+        "20250623.110076_S18",
+        "20250624.110775_S38",
+        "20250624.112649_S27",
+        "20250630.109255_S69",
+        "20250630.110686_S78",
+        "20250630.111788_S67",
+        "20250701.111526_S81",
+        "20250701.111784_S97",
+        "20250702.110363_S93",
+        "20250702.112297_S107",
+        "20250707.111647_S11",
+        "20250707.111813_S10",
+        "20250708.112644_S21",
+        "20250709.110405_S42",
+        "20250710.112500_S54",
+        "20250714.111791_S23",
+        "20250714.112467_S12",
+        "20250715.111549_S26",
+        "20250715.111797_S22",
+        "20250716.112044_S33",
+        "20250716.112110_S43",
+        "20250721.110088_S10",
+        "20250722.110511_S39",
+        "20250723.112239_S47",
+        "20250723.112296_S3",
+        "20250728.111766_S5",
+        "20250728.111767_S33",
+        "20250729.112193_S44",
+        "20250730.111202_S32",
+        "20250730.112548_S38",
+        "20250730.112792_S42",
+        "20250730.BL2_S54",
+        "20250730.TW_S53",
+        "20250804.112331_S11",
+        "20250806.BL2_S57",
+        "20250818.112112_S29",
+        "20250818.112641_S41",
+        "20250902.112492_S23",
+        "250422.107834_S30_L001",
+        "250810.112511_S7",
+        "250811.112439_S28",
+        "250811.113418_S32"
+      ]
+    }
+  }
+}
