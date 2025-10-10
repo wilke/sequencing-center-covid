@@ -34,6 +34,10 @@ def parse_demix(dir) -> dict:
         sys.exit("Not a directory: {dir}")
 
     for f in os.listdir(dir):
+        # Only process .out files - skip .freyja_version and other files
+        if not f.endswith('.out'):
+            continue
+
         fn = "/".join([dir, f])
         if not os.path.isfile(fn):
             sys.stderr.write("ERROR: Skipping " + f + ", not a file.\n")
