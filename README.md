@@ -40,6 +40,8 @@ make FREYJA_VERSION=2.0.0-09_08_2025-00-34-2025-09-08 strain
 - `1.5.3-03_07_2025-01-59-2025-03-10` - Stable version (92.72% concordance with v2.0.0)
 - Additional versions in `/local/incoming/covid/config/`
 
+**Container Naming**: Containers follow pattern `freyja_VERSION.sif` or `freyja_VERSION-TIMESTAMP.sif`
+
 📖 **[Detailed Freyja Version Usage Guide](docs/FREYJA_VERSION_USAGE.md)**
 
 ### Version Selection Priority

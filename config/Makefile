@@ -1,13 +1,14 @@
 BASE := /local/incoming/covid/
 BAMS := $(wildcard bam/*.bam)
 VARIANTS :=$(patsubst bam/%.sorted.bam,variants/%.variants.tsv,$(BAMS))
+METADATA_DIR := metadata
 
 # Freyja version configuration - backward compatible
 # Priority: make argument > environment variable > default (latest)
 FREYJA_VERSION ?= latest
 
 # Direct path construction - no mapping needed
-SINGULARITY := /local/incoming/covid/config/freyja_$(FREYJA_VERSION).sif 
+SINGULARITY := /local/incoming/covid/config/freyja_$(FREYJA_VERSION).sif
 BARCODES := /local/incoming/covid/config/usher_barcodes.feather
 LINEAGES := /local/incoming/covid/config/lineages.yml
 CURATED_LINEAGES := /local/incoming/covid/config/curated_lineages.json
@@ -51,7 +52,12 @@ bam/%.sorted.bam:
 variants/%.variants.tsv: bam/%.sorted.bam validate-version
 	@echo "Processing $* with Freyja $(FREYJA_VERSION)"
 	$(eval sample:=$(shell basename $@ .variants.tsv))
-	singularity run $(BIND) $(SINGULARITY)  freyja variants bam/${sample}.sorted.bam --variants variants/${sample}.variants --depths depth/${sample}.depth --ref $(REFERENCE)        
+	@mkdir -p $(METADATA_DIR)
+	singularity run $(BIND) $(SINGULARITY)  freyja variants bam/${sample}.sorted.bam --variants variants/${sample}.variants --depths depth/${sample}.depth --ref $(REFERENCE)
 	echo $(shell if [ -f variants/${sample}.variants.tsv ] ; then echo "Found variants/${sample}.variants.tsv" ; else touch variants/${sample}.variants.missing ; echo Missing variants/${sample}.variants.tsv ; fi )
 	singularity exec $(BIND) $(SINGULARITY) freyja demix --depthcutoff $(CUTOFF) --lineageyml $(LINEAGES) --meta $(CURATED_LINEAGES) --barcodes $(BARCODES) --output output/${sample}.out variants/${sample}.variants.tsv depth/${sample}.depth
-	@echo "$(FREYJA_VERSION)" > output/${sample}.freyja_version
+	@# Write version metadata to dedicated metadata directory
+	@echo "freyja_requested=$(FREYJA_VERSION)" > $(METADATA_DIR)/${sample}.freyja_version
+	@echo "freyja_actual=$$(if [ -L '$(SINGULARITY)' ]; then readlink -f '$(SINGULARITY)' | xargs basename | cut -d'-' -f1 | sed 's/freyja_//'; else echo '$(FREYJA_VERSION)'; fi)" >> $(METADATA_DIR)/${sample}.freyja_version
+	@echo "freyja_container=$$(readlink -f '$(SINGULARITY)' | xargs basename)" >> $(METADATA_DIR)/${sample}.freyja_version
+	@echo "processed_date=$$(date -Iseconds)" >> $(METADATA_DIR)/${sample}.freyja_version

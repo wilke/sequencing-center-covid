@@ -35,12 +35,29 @@ export FREYJA_VERSION=1.5.3-03_07_2025-01-59-2025-03-10
 make strain
 ```
 
+## Container Naming Conventions
+
+Freyja containers follow these naming patterns in `/local/incoming/covid/config/`:
+
+### Naming Patterns
+1. **Simple version**: `freyja_VERSION.sif` (e.g., `freyja_1.4.2.sif`)
+2. **Version with timestamp**: `freyja_VERSION-TIMESTAMP.sif` (e.g., `freyja_2.0.0-09_08_2025-00-34-2025-09-08.sif`)
+3. **Alternative dot separator**: `freyja.VERSION-TIMESTAMP.sif` (e.g., `freyja.1.5.3-07_14_2025-00-44-2025-07-14.sif`)
+4. **Latest symlink**: `freyja_latest.sif` → points to current production version
+
+### Version String Format
+When specifying FREYJA_VERSION, use the part after `freyja_` or `freyja.`:
+- For `freyja_2.0.0-09_08_2025-00-34-2025-09-08.sif` use: `2.0.0-09_08_2025-00-34-2025-09-08`
+- For `freyja.1.5.3-07_14_2025-00-44-2025-07-14.sif` use: `1.5.3-07_14_2025-00-44-2025-07-14`
+- For `freyja_1.4.2.sif` use: `1.4.2`
+- For latest version use: `latest`
+
 ## Available Versions
 
 To see all available Freyja versions:
 
 ```bash
-ls -1 /local/incoming/covid/config/freyja_*.sif | sed 's/.*freyja_//' | sed 's/.sif//'
+ls -1 /local/incoming/covid/config/freyja*.sif | sed 's/.*freyja[._]//' | sed 's/.sif//'
 ```
 
 Current versions (as of 2025-09-16):
